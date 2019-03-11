@@ -13,7 +13,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/giseburt/TinyG-node.git"
+    "url": "git+https://github.com/Dinesh-Durai/TinyG-node.git"
   },
   "license": "GPL",
   "dependencies": {
