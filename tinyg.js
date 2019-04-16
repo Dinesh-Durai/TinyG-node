@@ -990,83 +990,85 @@ TinyG.prototype.list = function(callback) {
 
     for (var i = 0; i < results.length; i++) {
       var item = results[i];
+      if (item.pnpId != undifined)
+      {
+        if (process.platform === 'win32') {
+          // Windows:
+          // pnpId: USB\VID_1D50&PID_606D&MI_00\6&3B3CEA53&0&0000
+          // pnpId: USB\VID_1D50&PID_606D&MI_02\6&3B3CEA53&0&0002
 
-      if (process.platform === 'win32') {
-        // Windows:
-        // pnpId: USB\VID_1D50&PID_606D&MI_00\6&3B3CEA53&0&0000
-        // pnpId: USB\VID_1D50&PID_606D&MI_02\6&3B3CEA53&0&0002
+          // WARNING -- explicit test against VIP/PID combo.
+          if ((x = item.pnpId.match(/^USB\\VID_([0-9A-Fa-f]+)&PID_([0-9A-Fa-f]+)&MI_([0-9]+)\\(.*)$/)) && (x[1] == '1D50') && (x[2] == '606D')) {
+            var vendor = x[1];
+            var pid = x[2];
+            var theRest = x[4].split('&');
+            var serialNumber = theRest[1];
 
-        // WARNING -- explicit test against VIP/PID combo.
-        if ((x = item.pnpId.match(/^USB\\VID_([0-9A-Fa-f]+)&PID_([0-9A-Fa-f]+)&MI_([0-9]+)\\(.*)$/)) && (x[1] == '1D50') && (x[2] == '606D')) {
-          var vendor = x[1];
-          var pid = x[2];
-          var theRest = x[4].split('&');
-          var serialNumber = theRest[1];
+            if ((tinygs.length > 0) && (tinygs[tinygs.length-1].serialNumber == serialNumber)) {
+              tinygs[tinygs.length-1].dataPortPath = item.comName;
+              continue;
+            }
 
-          if ((tinygs.length > 0) && (tinygs[tinygs.length-1].serialNumber == serialNumber)) {
-            tinygs[tinygs.length-1].dataPortPath = item.comName;
-            continue;
+            tinygs.push({path: item.comName, pnpId: item.pnpId, serialNumber: serialNumber});
           }
 
-          tinygs.push({path: item.comName, pnpId: item.pnpId, serialNumber: serialNumber});
-        }
-
-      } else if (process.platform === 'darwin') {
-        // MacOS X:
-        //  Command:
-        //   {
-        //     comName: '/dev/cu.usbmodem142433',
-        //     manufacturer: 'Synthetos',
-        //     serialNumber: '0084-d639-29c6-08c6',
-        //     pnpId: '',
-        //     locationId: '0x14243000',
-        //     vendorId: '0x1d50',
-        //     productId: '0x606d'
-        //   }
-        //  Data:
-        //   {
-        //     comName: '/dev/cu.usbmodem142431',
-        //     manufacturer: 'Synthetos',
-        //     serialNumber: '0084-d639-29c6-08c6',
-        //     pnpId: '',
-        //     locationId: '0x14243000',
-        //     vendorId: '0x1d50',
-        //     productId: '0x606d'
-        //   }
-
-        // console.log(util.inspect(item) + "\n\n--\n\n");
-
-        if (item.manufacturer == 'FTDI') {
-          tinygs.push({path: item.comName});
-        } else if (item.manufacturer == 'Synthetos') {
-          // if (tinygs.length > 0 && (x = tinygs[tinygs.length-1].path.match(/^(.*?)([0-9]+)/)) && (y = item.comName.match(/^(.*?)([0-9]+)/)) && x[1] == y[1]) {
-          //   x[2] = parseInt(x[2]);
-          //   y[2] = parseInt(y[2]);
-          //
-          //   if (((x[2] == 1) && (y[2] == 3)) || (x[2]+1 == y[2]) || (x[2]+2 == y[2])) {
-          //     tinygs[tinygs.length-1].dataPortPath = item.comName;
-          //     continue;
+        } else if (process.platform === 'darwin') {
+          // MacOS X:
+          //  Command:
+          //   {
+          //     comName: '/dev/cu.usbmodem142433',
+          //     manufacturer: 'Synthetos',
+          //     serialNumber: '0084-d639-29c6-08c6',
+          //     pnpId: '',
+          //     locationId: '0x14243000',
+          //     vendorId: '0x1d50',
+          //     productId: '0x606d'
           //   }
-          if (tinygs.length > 0 && (tinygs[tinygs.length-1].serialNumber = item.serialNumber)) {
-            tinygs[tinygs.length-1].dataPortPath = item.comName;
-          } else {
-            tinygs.push({path: item.comName, serialNumber: item.serialNumber});
-          }
-          // console.log(util.inspect(tinygs) + " **");
-        }
-      } else {
-        // Linux:
-        //  Command: { comName: '/dev/ttyACM0', manufacturer: undefined, pnpId: 'usb-Synthetos_TinyG_v2_002-if00' }
-        //     Data: { comName: '/dev/ttyACM1', manufacturer: undefined, pnpId: 'usb-Synthetos_TinyG_v2_002-if02' }
-        if ((x = item.pnpId.match(/^usb-Synthetos_TinyG_v2_([0-9A-Fa-f]+)-if([0-9]+)/))) {
-          if (tinygs.length > 0 && (y = tinygs[tinygs.length-1].pnpId.match(/^usb-Synthetos_TinyG_v2_([0-9A-Fa-f]+)-if([0-9]+)/)) && x[1] == y[1]) {
-            tinygs[tinygs.length-1].dataPortPath = item.comName;
-            continue;
-          }
+          //  Data:
+          //   {
+          //     comName: '/dev/cu.usbmodem142431',
+          //     manufacturer: 'Synthetos',
+          //     serialNumber: '0084-d639-29c6-08c6',
+          //     pnpId: '',
+          //     locationId: '0x14243000',
+          //     vendorId: '0x1d50',
+          //     productId: '0x606d'
+          //   }
 
-          tinygs.push({path: item.comName, pnpId: item.pnpId});
+          // console.log(util.inspect(item) + "\n\n--\n\n");
+
+          if (item.manufacturer == 'FTDI') {
+            tinygs.push({path: item.comName});
+          } else if (item.manufacturer == 'Synthetos') {
+            // if (tinygs.length > 0 && (x = tinygs[tinygs.length-1].path.match(/^(.*?)([0-9]+)/)) && (y = item.comName.match(/^(.*?)([0-9]+)/)) && x[1] == y[1]) {
+            //   x[2] = parseInt(x[2]);
+            //   y[2] = parseInt(y[2]);
+            //
+            //   if (((x[2] == 1) && (y[2] == 3)) || (x[2]+1 == y[2]) || (x[2]+2 == y[2])) {
+            //     tinygs[tinygs.length-1].dataPortPath = item.comName;
+            //     continue;
+            //   }
+            if (tinygs.length > 0 && (tinygs[tinygs.length-1].serialNumber = item.serialNumber)) {
+              tinygs[tinygs.length-1].dataPortPath = item.comName;
+            } else {
+              tinygs.push({path: item.comName, serialNumber: item.serialNumber});
+            }
+            // console.log(util.inspect(tinygs) + " **");
+          }
+        } else {
+          // Linux:
+          //  Command: { comName: '/dev/ttyACM0', manufacturer: undefined, pnpId: 'usb-Synthetos_TinyG_v2_002-if00' }
+          //     Data: { comName: '/dev/ttyACM1', manufacturer: undefined, pnpId: 'usb-Synthetos_TinyG_v2_002-if02' }
+          if ((x = item.pnpId.match(/^usb-Synthetos_TinyG_v2_([0-9A-Fa-f]+)-if([0-9]+)/))) {
+            if (tinygs.length > 0 && (y = tinygs[tinygs.length-1].pnpId.match(/^usb-Synthetos_TinyG_v2_([0-9A-Fa-f]+)-if([0-9]+)/)) && x[1] == y[1]) {
+              tinygs[tinygs.length-1].dataPortPath = item.comName;
+              continue;
+            }
+
+            tinygs.push({path: item.comName, pnpId: item.pnpId});
+          }
         }
-      }
+    }
 
       // if (item.manufacturer == 'FTDI' || item.manufacturer == 'Synthetos') {
         // tinygOnlyResults.push(item);
