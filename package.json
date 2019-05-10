@@ -19,6 +19,7 @@
   "dependencies": {
     "chalk": "^0.5.1",
     "nomnom": "^1.8.0",
+    "serialport": "^7.1.5",
     "q": "^1.1.2",
     "sprintf": "^0.1.4"
   },
