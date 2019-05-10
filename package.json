@@ -17,11 +17,11 @@
   },
   "license": "GPL",
   "dependencies": {
-    "chalk": "^0.5.1",
-    "nomnom": "^1.8.0",
+    "chalk": "^2.4.2",
+    "nomnom": "^1.8.1",
     "serialport": "^7.1.5",
-    "q": "^1.1.2",
-    "sprintf": "^0.1.4"
+    "q": "^1.5.1",
+    "sprintf": "^1.1.2"
   },
   "bin": {
     "g": "bin/g.js"
